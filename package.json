@@ -1,0 +1,21 @@
+{
+  "name": "history-posts",
+  "version": "1.0.0",
+  "description": "Nodejs application to post stories and comments",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js"
+  },
+  "keywords": [
+    "nodejs",
+    "javascript",
+    "express",
+    "mongodb"
+  ],
+  "author": "Josué Daniel Flores Morales",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.16.4",
+    "mongoose": "^5.4.1"
+  }
+}
