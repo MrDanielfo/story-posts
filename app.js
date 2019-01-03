@@ -4,12 +4,14 @@ const passport = require('passport');
 const session = require('express-session');
 const cookieParser = require('cookie-parser'); 
 const handlebars = require('express-handlebars'); 
+const path = require('path'); 
 
 
 const app = express();
 // Llamar rutas
 const auth = require('./routes/auth');
 const index = require('./routes/index'); 
+const stories = require('./routes/stories'); 
 
 // Passport
 require('./config/passport')(passport); 
@@ -38,6 +40,10 @@ app.engine('handlebars', handlebars({
 
 app.set('view engine', 'handlebars'); 
 
+// Static Folder 
+
+app.use(express.static(path.join(__dirname, 'public'))); 
+
 
 // Global Variables 
 
@@ -64,6 +70,7 @@ mongoose.connect(keys.mongoURI, {
 // Requerir rutas /* estas deben ir siempre hasta abajo */ 
 app.use('/auth', auth); 
 app.use('/', index); 
+app.use('/stories', stories); 
 
 
 const PORT = process.env.PORT || 5000; 
