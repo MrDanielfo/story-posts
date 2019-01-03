@@ -5,6 +5,7 @@ const session = require('express-session');
 const cookieParser = require('cookie-parser'); 
 const handlebars = require('express-handlebars'); 
 const path = require('path'); 
+const bodyParser = require('body-parser'); 
 
 
 const app = express();
@@ -40,6 +41,9 @@ app.engine('handlebars', handlebars({
 
 app.set('view engine', 'handlebars'); 
 
+// parse application/x-www-form-urlencoded and json 
+app.use(bodyParser.urlencoded({ extended: false }))
+app.use(bodyParser.json()); 
 // Static Folder 
 
 app.use(express.static(path.join(__dirname, 'public'))); 
