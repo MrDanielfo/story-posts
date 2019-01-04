@@ -11,16 +11,23 @@ const Story = mongoose.model('stories');
 const User = mongoose.model('users'); 
 
 router.get('/', (req, res) => {
-    res.render('stories/index');
+    Story.find({status: 'public'})
+        .populate('user')
+        .then(stories => {
+            res.render('stories/index', {
+              stories: stories
+            })
+        })
+        .catch(err => {
+          console.log(error); 
+        })
 })
 
 router.get('/add', ensureAuthenticated, (req, res) => {
   res.render('stories/add');
 });
 
-router.get('/edit', ensureAuthenticated, (req, res) => {
-    res.render('stories/edit');
-});
+
 
 /* post stories */ 
 
@@ -65,22 +72,82 @@ router.post('/', ensureAuthenticated, (req, res) => {
 
 });
 
+// Show single story
+
 router.get('/single/:id', (req, res) => {
 
-    Story.findById(req.params.id, (err, story) => {
-      User.findById(story.user, function (err, user) {
-        if (err) {
-          console.log(err);
-        } else {
-          res.render('stories/single', {
-            story: story,
-            author: user.firstName
-          });
-        }
-      })
-
-    });
-
+    Story.findById(req.params.id)
+          .populate('user')
+          .then(story => {
+            res.render('stories/single', {
+              story: story
+            });
+          })
+          .catch(err => {
+            console.log(err); 
+          })
 });
+
+// Edit Story Get 
+
+router.get('/edit/:id', ensureAuthenticated, (req, res) => {
+  Story.findById(req.params.id)
+    .then(story => {
+      res.render('stories/edit', {
+        story: story
+      });
+    })
+    .catch(err => {
+      console.log(err);
+    })
+  
+});
+
+// Edit Story Put 
+
+router.put('/:id', ensureAuthenticated, (req, res) => {
+    let allowComments;
+    let errors = [];
+
+    if (req.body.allowComments) {
+      allowComments = true;
+    } else {
+      allowComments = false;
+    }
+
+    // Edit a Story 
+    if (!req.body.title) {
+      errors.push({ text: 'Please add a title for your story' });
+    } else if (!req.body.body) {
+      errors.push({ text: 'Please add a body for your story' });
+    }
+
+    Story.findOne({
+      _id: req.params.id
+    }).then(story => {
+      story.title = req.body.title;
+      story.status = req.body.status;
+      story.allowComments = allowComments;
+      story.body = req.body.body; 
+      story.save()
+            .then(story => {
+              res.redirect(`/dashboard`);
+            })
+    }).catch(err => {
+      console.log('error', err); 
+    })
+});
+
+// Delete Story
+
+router.delete('/:id', ensureAuthenticated, (req, res) => {
+  Story.deleteOne({
+    _id: req.params.id
+  }).then(() => {
+      res.redirect('/dashboard'); 
+  }).catch(err => {
+      console.log(err); 
+  })
+})
 
 module.exports = router; 

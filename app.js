@@ -6,6 +6,7 @@ const cookieParser = require('cookie-parser');
 const handlebars = require('express-handlebars'); 
 const path = require('path'); 
 const bodyParser = require('body-parser'); 
+const methodOverride = require('method-override'); 
 
 
 const app = express();
@@ -33,9 +34,19 @@ app.use(session({
 app.use(passport.initialize());
 app.use(passport.session());
 
+// Load Handlebars Helpers
+
+const { truncate, stripTags, formatDate, select } = require('./helpers/handlebars'); 
+
 // Handlebars middleware
 
 app.engine('handlebars', handlebars({
+    helpers: {
+        truncate : truncate,
+        stripTags: stripTags,
+        formatDate: formatDate,
+        select: select
+    },
     defaultLayout: 'main'
 }));
 
@@ -45,9 +56,9 @@ app.set('view engine', 'handlebars');
 app.use(bodyParser.urlencoded({ extended: false }))
 app.use(bodyParser.json()); 
 // Static Folder 
-
 app.use(express.static(path.join(__dirname, 'public'))); 
-
+// Method Override
+app.use(methodOverride('_method')); 
 
 // Global Variables 
 
@@ -70,6 +81,8 @@ mongoose.connect(keys.mongoURI, {
   .catch(err => {
       console.log(err); 
   })
+
+
 
 // Requerir rutas /* estas deben ir siempre hasta abajo */ 
 app.use('/auth', auth); 
