@@ -13,6 +13,7 @@ const User = mongoose.model('users');
 router.get('/', (req, res) => {
     Story.find({status: 'public'})
         .populate('user')
+        .sort({date: 'desc'})
         .then(stories => {
             res.render('stories/index', {
               stories: stories
@@ -78,10 +79,28 @@ router.get('/single/:id', (req, res) => {
 
     Story.findById(req.params.id)
           .populate('user')
+          .populate('comments.commentUser')
           .then(story => {
-            res.render('stories/single', {
-              story: story
-            });
+              if(story.status === "public") {
+                res.render('stories/single', { 
+                  story: story 
+                });
+                  
+              } else {
+                // Se tiene que validar que el usuario esté loggeado para que no se trabe la aplicación
+                if(req.user) {
+                  if (story.user.id === req.user.id) {
+                    res.render('stories/single', {
+                      story: story
+                    });
+                  } else {
+                    res.redirect('/stories');
+                  }
+                } else {
+                  res.redirect('/stories'); 
+                }
+                
+              }
           })
           .catch(err => {
             console.log(err); 
@@ -93,9 +112,13 @@ router.get('/single/:id', (req, res) => {
 router.get('/edit/:id', ensureAuthenticated, (req, res) => {
   Story.findById(req.params.id)
     .then(story => {
-      res.render('stories/edit', {
-        story: story
-      });
+      if (story.user != req.user.id) {
+        res.redirect('/dashboard')
+      } else {
+        res.render('stories/edit', {
+          story: story
+        });
+      } 
     })
     .catch(err => {
       console.log(err);
@@ -149,5 +172,75 @@ router.delete('/:id', ensureAuthenticated, (req, res) => {
       console.log(err); 
   })
 })
+
+// Add a comment 
+
+router.post('/comment/:id', ensureAuthenticated, (req, res) => {
+  let errors = [];
+
+  if(!req.body.comment) {
+    errors.push({text: "You can not add an empty comment"})
+  }
+
+    Story.findOne({
+      _id: req.params.id
+    }).then(story => {
+
+        const newComment = {
+          commentBody: req.body.comment,
+          commentUser: req.user.id
+        }
+        story.comments.unshift(newComment)
+        story.save()
+             .then(story => {
+               let id = story.id
+               res.redirect(`/stories/single/${id}`);
+             })
+             .catch(err => {
+               console.log(err)
+             })
+    }).catch(err => {
+        console.log(err)
+    })
+});
+
+// Filtrado de historias por autor
+
+router.get('/user/:id', (req, res) => {
+  Story.find({ 
+    status: 'public',
+    user: req.params.id
+  })
+    .populate('user')
+    .sort({ date: 'desc' })
+    .then(stories => {
+      res.render('stories/user', {
+        stories: stories
+      })
+    })
+    .catch(err => {
+      console.log(error);
+    })
+})
+
+// historias del usuario 
+
+router.get('/my', ensureAuthenticated, (req, res) => {
+
+  Story.find({
+    user: req.user.id
+  })
+    .populate('user')
+    .sort({ date: 'desc' })
+    .then(stories => {
+      res.render('stories/my', {
+        stories: stories
+      })
+    })
+    .catch(err => {
+      console.log(error);
+    })
+
+}); 
 
 module.exports = router; 

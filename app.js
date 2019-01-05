@@ -36,7 +36,7 @@ app.use(passport.session());
 
 // Load Handlebars Helpers
 
-const { truncate, stripTags, formatDate, select } = require('./helpers/handlebars'); 
+const { truncate, stripTags, formatDate, select, editIcon } = require('./helpers/handlebars'); 
 
 // Handlebars middleware
 
@@ -45,7 +45,8 @@ app.engine('handlebars', handlebars({
         truncate : truncate,
         stripTags: stripTags,
         formatDate: formatDate,
-        select: select
+        select: select,
+        editIcon : editIcon
     },
     defaultLayout: 'main'
 }));
